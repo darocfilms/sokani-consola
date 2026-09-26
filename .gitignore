@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+._*
+
+# Xcode
+ios/build/
+**/xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Datos de otras marcas: en modo solo Sokani no se usan y no se publican.
+data/fixtures.json
+data/nanlite-protocol.json

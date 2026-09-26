@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sokani · Consola de luz</title>
+<meta name="description" content="Consola de luz multimarca para el set: 124 efectos, grupos, cues y 383 gelatinas.">
+<meta name="theme-color" content="#07070b">
+<meta name="color-scheme" content="dark">
+<meta name="application-name" content="Sokani">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sokani">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1320x2868.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1260x2736.jpg">
+<link rel="stylesheet" href="css/style.css?v=38">
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo"><span class="dot"></span> SOKANI X25 <small>consola RGB</small></div>
+    <div class="hspace"></div>
+    <span class="pill"><span class="led" id="ledConn"></span><span id="devName">Sin conectar</span></span>
+    <span class="pill adv">Protocolo <b id="pProto">—</b></span>
+    <span class="pill adv">TX <b id="pTx">—</b></span>
+    <span class="pill adv"><b id="pFps">0</b> paq/s</span>
+    <span class="pill" id="pTele" style="display:none">🔋 <b id="pBat">—</b> · 🌡 <b id="pTemp">—</b></span>
+    <button class="btn sm pri" id="btnInstall" hidden title="Instalar como app">⤓ Instalar</button>
+    <button class="btn sm" id="btnStage" title="Modo escenario a pantalla completa">⛶</button>
+    <button class="btn sm" id="btnLock" title="Bloquear la pantalla">🔓</button>
+    <button class="btn sm" id="btnAdv" title="Mostrar herramientas técnicas">⚙︎</button>
+    <button class="btn sm dang" id="btnBlackout" title="Espacio">⏻ Blackout</button>
+  </header>
+
+  <!-- ============ IZQUIERDA: conexión ============ -->
+  <aside>
+    <div class="card" id="cardRig">
+      <h3>💡 Luces <span class="r" id="rigCount">0</span></h3>
+      <div id="rigList"><div class="empty">Ninguna luz. Pulsa «Añadir luz».</div></div>
+      <button class="btn full pri" id="btnAddLight" style="margin-top:10px">+ Añadir luz</button>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn sm" id="btnRestore">↻ Reconectar</button>
+        <button class="btn sm" id="btnDisconnect" disabled>Soltar todas</button>
+      </div>
+      <label class="sw" style="margin-top:10px"><input type="checkbox" id="chkAutoRe" checked>
+        Reconectar sola si se cae</label>
+      <div class="hint">Cada luz se añade una vez; a partir de ahí vuelven solas al abrir la consola.
+        El <b>desfase</b> hace que un efecto recorra el rig de una punta a la otra.</div>
+    </div>
+
+    <div class="card">
+      <h3>🏷 Marcas <span class="r"><button class="btn sm ghost" id="btnCatalog">catálogo</button></span></h3>
+      <div id="brandList"></div>
+      <div class="hint">La consola detecta la marca por el nombre del dispositivo. Hoy el control
+        directo por Bluetooth está verificado en <b>Sokani</b>; Godox y Nanlite usan malla
+        cifrada y aparecen documentadas para ampliación.</div>
+    </div>
+
+
+    <div class="warnbox adv" id="warnBox">
+      <b>Antes de conectar:</b> Web Bluetooth solo funciona en <b>Chrome/Edge</b> de escritorio o Android,
+      y la página debe abrirse por <b>http://localhost</b> (no <code>file://</code>). Ejecuta
+      <code>./serve.sh</code> en la carpeta del proyecto.
+    </div>
+
+    <div class="card adv">
+      <h3>🔗 Conexión</h3>
+      <div class="grid2">
+        <button class="btn pri" id="btnConnect">Buscar luz</button>
+        <button class="btn" id="btnDisconnect" disabled>Desconectar</button>
+      </div>
+      <div style="margin-top:10px">
+        <label class="sw"><input type="checkbox" id="chkWide" checked> Descubrimiento amplio (todos los servicios 0xFExx/0xFFxx)</label>
+        <label class="sw"><input type="checkbox" id="chkFilter"> Filtrar por nombre</label>
+        <input type="text" id="namePrefix" placeholder="p. ej. Sokani, X25, LED" style="margin-top:6px;display:none">
+      </div>
+      <div class="hint">Si el tubo no aparece, apaga la app oficial del móvil: una luz ya emparejada
+        con otro dispositivo no acepta una segunda conexión.</div>
+    </div>
+
+    <div class="card adv">
+      <h3>🩺 Diagnóstico <span class="r"><button class="btn sm ghost" id="btnDiag">revisar</button></span></h3>
+      <div id="diagOut" class="hint" style="margin-top:0">Pulsa «revisar» para comprobar navegador,
+        contexto seguro, adaptador y permisos.</div>
+    </div>
+
+    <div class="card adv" id="cardUuid">
+      <h3>🆔 UUID propios <span class="r">clave si no aparece nada</span></h3>
+      <div class="hint" style="margin-top:0">
+        Web Bluetooth <b>solo deja ver los servicios que declaras de antemano</b>. Si el tubo usa un
+        UUID propietario de 128 bits, sus características quedan invisibles y parece que no se puede
+        escribir en él. Sácalos de <b>chrome://bluetooth-internals</b> → Devices → Inspect y pégalos aquí.
+      </div>
+      <textarea id="uuidList" placeholder="0000ff00-0000-1000-8000-00805f9b34fb&#10;6e400001-b5a3-f393-e0a9-e50e24dcca9e&#10;(uno por línea; también valen 16 bits tipo ffe0)"></textarea>
+      <button class="btn full sm" id="btnUuid" style="margin-top:8px">Guardar y reconectar</button>
+    </div>
+
+    <div class="card adv">
+      <h3>🧬 Protocolo <span class="r" id="protoState">no verificado</span></h3>
+      <select id="selDriver"></select>
+      <div class="hint" id="driverNote" style="margin-bottom:9px"></div>
+      <label class="f">Característica de escritura (TX)</label>
+      <select id="selChar"><option>— conecta primero —</option></select>
+      <div class="grid2" style="margin-top:9px">
+        <button class="btn sm" id="btnPwrOn">⏻ Encender</button>
+        <button class="btn sm" id="btnPwrOff">⭘ Apagar</button>
+      </div>
+    </div>
+
+    <div class="card adv">
+      <h3>🎯 Escáner de protocolo</h3>
+      <div class="hint" style="margin-top:0">
+        El protocolo del X25 no es público. Esto prueba cada <b>característica × formato de trama</b>
+        enviando <b>rojo → verde → azul → blanco</b>. Mira el tubo y pulsa <b>¡Es este!</b> en cuanto reaccione.
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn pri" id="btnScan">▶ Escanear</button>
+        <button class="btn" id="btnScanStop" disabled>■ Parar</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn sm" id="btnShotgun" title="Dispara todos los formatos por todas las características">💥 Escopeta</button>
+        <button class="btn sm" id="btnListen" title="Suscribirse a las notificaciones del tubo">👂 Escuchar</button>
+      </div>
+      <button class="btn full sm pri" id="btnIdent" style="margin-top:8px">🔎 Identificar protocolo (pregunta al tubo)</button>
+      <button class="btn full sm" id="btnRead" style="margin-top:6px">📖 Leer estado de la característica</button>
+      <div class="hint">La <b>escopeta</b> manda rojo por todas las características con todos los
+        formatos a la vez: en dos segundos sabes si el tubo reacciona a algo. <b>Escuchar</b> registra
+        lo que el tubo responde, que suele delatar la característica correcta.</div>
+      <div class="probe" id="probeBox" style="display:none">
+        <div style="font-size:11px;color:var(--tx2)">Probando <b id="probeN">0/0</b></div>
+        <div class="cur" id="probeCur">—</div>
+        <button class="btn full on" id="btnLock">✔ ¡Es este! Fijar protocolo</button>
+      </div>
+    </div>
+
+    <div class="card adv">
+      <h3>🔬 Mapa GATT</h3>
+      <div class="gatt" id="gattTree">Conecta para leer los servicios del dispositivo.</div>
+    </div>
+
+    <div class="card adv" id="cardCal">
+      <h3>🎯 Calibrar protocolo <span class="r">Sokani X25</span></h3>
+      <div class="hint" style="margin-top:0"><b>Prueba «Rojo» primero.</b> Si el tubo se pone
+        rojo, ya está y no necesitas calibrar nada. Calibrar solo si «Rojo» no hace nada.</div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn pri" id="btnCalRed">🔴 Rojo</button>
+        <button class="btn" id="btnCalOff">Apagar</button>
+      </div>
+      <button class="btn full sm" id="btnCalReset" style="margin-top:8px">↺ Restaurar protocolo por defecto</button>
+      <div class="grid2" style="margin-top:14px">
+        <button class="btn sm" id="btnCal">Calibrar…</button>
+        <button class="btn sm" id="btnCalStop" disabled>■ Parar</button>
+      </div>
+      <div class="probe" id="calBox" style="display:none">
+        <div style="font-size:11px;color:var(--tx2)">Probando <b id="calN">0/0</b></div>
+        <div class="cur" id="calCur">—</div>
+        <button class="btn full on" id="btnCalHit">✔ ¡Es esta! El tubo está rojo</button>
+      </div>
+      <div class="row wrap" style="margin-top:10px;gap:6px">
+        <label class="f" style="margin:0">suma</label><select id="cfgChk" style="width:auto">
+          <option value="0">payload</option><option value="1">+cabecera</option>
+          <option value="2">compl. 2</option><option value="3">XOR</option></select>
+        <label class="f" style="margin:0">aT</label><input type="number" id="cfgAT" value="0" min="0" max="255" style="width:56px">
+        <label class="f" style="margin:0">ch</label><input type="number" id="cfgCh" value="0" min="0" max="255" style="width:56px">
+        <label class="f" style="margin:0">gr</label><input type="number" id="cfgGr" value="0" min="0" max="255" style="width:56px">
+      </div>
+    </div>
+
+    <div class="card adv" id="cardAscii">
+      <h3>⌨︎ Terminal de texto <span class="r">diagnóstico</span></h3>
+      <div class="hint" style="margin-top:0">Sus mensajes (<code>ad:</code>, <code>chg:</code>,
+        <code>k:7-50-</code>) son texto plano. Esto es solo para hurgar: el canal de
+        <b>control</b> es binario y ya está resuelto.</div>
+      <div class="row" style="margin-top:9px">
+        <input type="text" id="asciiOne" placeholder="c:255,0,0" style="flex:1">
+        <button class="btn sm pri" id="btnAsciiSend">Enviar</button>
+      </div>
+      <label class="f" style="margin-top:12px">Explorar comandos (uno por línea)</label>
+      <textarea id="asciiList" style="min-height:110px"></textarea>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn sm" id="btnAsciiReset">Lista AT</button>
+        <button class="btn sm pri" id="btnAsciiProbe">🔤 Explorar</button>
+      </div>
+      <div class="grid2" style="margin-top:6px">
+        <button class="btn sm ghost" id="btnAsciiOther">Otros formatos</button>
+        <button class="btn sm ghost" id="btnAsciiKeys">Eco de teclas</button>
+      </div>
+      <label class="f" style="margin-top:12px">Plantilla de color · protocolo «Plantilla de texto»</label>
+      <input type="text" id="asciiTpl" value="c:{R},{G},{B}">
+      <div class="hint">Tokens: <b>{R} {G} {B} {BR} {H} {H2} {S} {V}</b>. Cuando demos con el
+        comando bueno, se escribe aquí y los 83 efectos quedan andando.</div>
+      <button class="btn full sm" id="btnAsciiTpl" style="margin-top:8px">Guardar plantilla de texto</button>
+    </div>
+
+    <div class="card adv">
+      <h3>⌨︎ Laboratorio de tramas (hex)</h3>
+      <label class="f">Hex crudo (se envía a la TX seleccionada)</label>
+      <textarea id="rawHex">7E 00 05 03 FF 00 00 00 EF</textarea>
+      <button class="btn full sm" id="btnRaw" style="margin-top:8px">Enviar trama</button>
+      <label class="f" style="margin-top:12px">Plantilla propia · efecto «Plantilla propia»</label>
+      <textarea id="tplRgb">7E 00 05 03 {R} {G} {B} 00 EF</textarea>
+      <div class="hint">Tokens: <b>{R} {G} {B} {BR} {BR255} {H} {HI} {LO} {S} {V} {K} {SUM} {XOR}</b>.
+        Lo demás se lee como hex.</div>
+      <button class="btn full sm" id="btnTpl" style="margin-top:8px">Guardar plantilla</button>
+    </div>
+
+    <div class="card adv">
+      <h3>✍︎ Modo de escritura</h3>
+      <select id="selWriteMode">
+        <option value="auto">Automático (sin respuesta si se puede)</option>
+        <option value="noresp">Forzar sin respuesta</option>
+        <option value="resp">Forzar con respuesta</option>
+      </select>
+      <div class="sl" style="margin-top:11px;margin-bottom:0">
+        <div class="top"><span>Pausa entre tramas</span><b id="vGap">0 ms</b></div>
+        <input type="range" id="sGap" min="0" max="60" value="0"></div>
+      <div class="hint">Algunos controladores solo aceptan uno de los dos modos, y unos pocos
+        necesitan unos milisegundos entre tramas o descartan lo que llega.</div>
+    </div>
+
+    <div class="card adv">
+      <h3>📜 Registro <span class="r"><button class="btn sm ghost" id="btnCopyLog">copiar</button>
+        <button class="btn sm ghost" id="btnClrLog">limpiar</button></span></h3>
+      <div id="log"></div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTRO: efectos ============ -->
+  <main>
+    <div class="preview">
+      <div class="spill t" id="spillT"></div>
+      <div class="spill b" id="spillB"></div>
+      <div class="tube"><div class="glow" id="glow"></div><div class="grill"></div><div class="gloss"></div></div>
+      <div class="pmeta">
+        <span class="chip">RGB <b id="mRgb">0 0 0</b></span>
+        <span class="chip">HEX <b id="mHex">#000000</b></span>
+        <span class="chip">Brillo <b id="mBr">100%</b></span>
+        <span class="chip adv" id="mFrame">— </span>
+      </div>
+      <canvas id="scope"></canvas>
+    </div>
+
+    <div class="now" id="nowBox" title="Toca para ver los ajustes del efecto">
+      <div class="ic" id="nowIc">⬤</div>
+      <div>
+        <div class="t1" id="nowName">Color fijo</div>
+        <div class="t2" id="nowDesc">Tono plano y estable</div>
+      </div>
+      <div class="hspace"></div>
+      <input type="text" id="fxText" value="SOS" maxlength="60" placeholder="Texto a parpadear"
+             style="display:none;width:190px">
+      <button class="btn sm" id="btnAddSeq">+ Secuencia</button>
+      <button class="btn sm" id="btnFav">★ Favorito</button>
+    </div>
+
+    <div class="gtabs" id="gtabs"></div>
+
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Buscar efecto…  (tormenta, estrobo, policía, fuego…)" style="flex:1;min-width:200px">
+      <button class="btn sm" id="btnRandom">🎲 Aleatorio</button>
+      <span class="pill"><b id="fxCount">0</b> efectos</span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="egrid" id="grid"></div>
+  </main>
+
+  <!-- ============ DERECHA: controles ============ -->
+  <aside class="right">
+    <div class="card">
+      <h3>🎛 Maestro</h3>
+      <div class="sl"><div class="top"><span>Brillo</span><b id="vBri">100%</b></div>
+        <input type="range" id="sBri" min="0" max="100" value="100"></div>
+      <div class="sl"><div class="top"><span>Velocidad</span><b id="vSpd">1.00×</b></div>
+        <input type="range" id="sSpd" min="5" max="400" value="100"></div>
+      <div class="sl"><div class="top"><span>Intensidad</span><b id="vInt">50%</b></div>
+        <input type="range" id="sInt" min="0" max="100" value="50"></div>
+      <div class="sl"><div class="top"><span>Tono</span><b id="vHue">0°</b></div>
+        <input type="range" class="hue" id="sHue" min="0" max="359" value="0"></div>
+      <div class="sl"><div class="top"><span>Saturación</span><b id="vSat">100%</b></div>
+        <input type="range" class="sat" id="sSat" min="0" max="100" value="100"></div>
+      <div class="sl"><div class="top"><span>Temperatura</span><b id="vKel">5600 K</b></div>
+        <input type="range" class="kel" id="sKel" min="1800" max="10000" value="5600" step="50"></div>
+      <div class="sl"><div class="top"><span>Verde ⇄ Magenta</span><b id="vGm">0</b></div>
+        <input type="range" class="gm" id="sGm" min="-100" max="100" value="0"></div>
+      <div class="sl" style="margin-bottom:10px"><div class="top"><span>Suavizado</span><b id="vSm">20%</b></div>
+        <input type="range" id="sSm" min="0" max="95" value="20"></div>
+      <label class="f">Curva de dimado</label>
+      <select id="selCurva">
+        <option value="lin">Lineal</option>
+        <option value="sq">Cuadrática (más fino abajo)</option>
+        <option value="s">Curva en S</option>
+        <option value="log">Cúbica (muy fino abajo)</option>
+      </select>
+      <div class="hint">El suavizado interpola entre tramas: quita el escalonado en fundidos lentos,
+        pero resta mordiente a los estrobos.</div>
+    </div>
+
+    <div class="card">
+      <h3>🎥 Cámara</h3>
+      <label class="f">Sincronizar estrobos con los fotogramas</label>
+      <select id="selCamFps">
+        <option value="0">Libre (sin sincronizar)</option>
+        <option value="23.976">23,976 fps</option><option value="24">24 fps</option>
+        <option value="25">25 fps</option><option value="29.97">29,97 fps</option>
+        <option value="30">30 fps</option><option value="48">48 fps</option>
+        <option value="50">50 fps</option><option value="60">60 fps</option>
+      </select>
+      <div class="hint" id="camHint">Un estrobo que no sea múltiplo exacto de los fps
+        produce bandas y parpadeo irregular en el material grabado.</div>
+    </div>
+
+    <div class="card">
+      <h3>♩ Tempo</h3>
+      <div class="row">
+        <button class="btn pri" id="btnTap" style="flex:1">TAP</button>
+        <input type="number" id="bpm" value="120" min="20" max="300" style="width:78px;text-align:center">
+        <span style="font-size:11px;color:var(--tx3)">BPM</span>
+      </div>
+      <label class="sw" style="margin-top:9px"><input type="checkbox" id="chkBeatSync"> Velocidad atada al tempo</label>
+    </div>
+
+    <div class="card">
+      <h3>🎤 Audio-reactivo</h3>
+      <div class="grid2">
+        <button class="btn" id="btnMic">Activar micro</button>
+        <button class="btn" id="btnMicOff" disabled>Parar</button>
+      </div>
+      <div class="bars" id="bars"></div>
+      <div class="sl" style="margin-top:11px;margin-bottom:0">
+        <div class="top"><span>Ganancia</span><b id="vGain">1.0×</b></div>
+        <input type="range" id="sGain" min="10" max="500" value="100"></div>
+      <label class="sw" style="margin-top:8px"><input type="checkbox" id="chkDuck"> El audio modula cualquier efecto</label>
+    </div>
+
+    <div class="card">
+      <h3>🎬 Cues <span class="r" id="cueInfo">—</span></h3>
+      <div class="seq" id="cueList"><div class="empty">Sin cues. Ajusta un look y pulsa «Grabar».</div></div>
+      <button class="btn full pri" id="btnGo" style="margin-top:6px">▶ GO <span style="opacity:.6;font-weight:400">·  G</span></button>
+      <div class="grid3" style="margin-top:8px">
+        <button class="btn sm" id="btnCueRec">● Grabar</button>
+        <button class="btn sm" id="btnCuePrev">◀</button>
+        <button class="btn sm" id="btnCueClr">🗑</button>
+      </div>
+      <label class="sw" style="margin-top:9px"><input type="checkbox" id="chkCueLoop" checked> Volver al principio al acabar</label>
+      <div class="sl" style="margin-top:9px;margin-bottom:0">
+        <div class="top"><span>Fundido por defecto</span><b id="vFade">0.0 s</b></div>
+        <input type="range" id="sFade" min="0" max="100" value="0"></div>
+      <div class="hint">Cada cue guarda el efecto y los mandos de <b>todos</b> los grupos.
+        El tiempo de la derecha es su fundido; el de auto-encadena, 0 = manual.</div>
+    </div>
+
+    <div class="card">
+      <h3>🎨 Color desde imagen</h3>
+      <div id="dropImg" class="drop">Suelta un fotograma aquí<br><small>o pulsa para elegir archivo</small></div>
+      <input type="file" id="fileImg" accept="image/*" style="display:none">
+      <canvas id="imgCv" style="display:none"></canvas>
+      <div class="swatches" id="paleta"></div>
+      <div class="hint" id="imgHint" style="display:none">Pulsa en la imagen para tomar ese color,
+        o elige uno de la paleta extraída.</div>
+    </div>
+
+    <div class="card">
+      <h3>🎞 Biblioteca de gelatinas <span class="r" id="gelCount">—</span></h3>
+      <input type="text" id="gelSearch" placeholder="Buscar gelatina…  (CTO, Rose, 279, Steel…)">
+      <div class="gelgrid" id="gelGrid"></div>
+      <div class="hint">Equivalencias de filtro Rosco y Lee. Se aplican como color a la luz
+        (o al grupo activo), así que funcionan con cualquier tubo RGB.</div>
+    </div>
+
+    <div class="card">
+      <h3>💾 Presets</h3>
+      <div class="row" style="margin-bottom:8px">
+        <input type="text" id="presetName" placeholder="Nombre del preset">
+        <button class="btn sm pri" id="btnSavePreset">Guardar</button>
+      </div>
+      <select id="selPreset" size="5" style="height:auto"></select>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn sm" id="btnLoadPreset">Cargar</button>
+        <button class="btn sm" id="btnDelPreset">Borrar</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn sm" id="btnExport">⤓ Exportar todo</button>
+        <button class="btn sm" id="btnImport">⤒ Importar</button>
+      </div>
+      <input type="file" id="fileCfg" accept="application/json" style="display:none">
+      <div class="hint">Exporta grupos, cues, presets, favoritos y ajustes del rig
+        en un archivo para llevártelo a otro equipo.</div>
+    </div>
+
+    <div class="card">
+      <h3>⚙︎ Transmisión</h3>
+      <div class="sl"><div class="top"><span>Tramas por segundo</span><b id="vFps">18</b></div>
+        <input type="range" id="sFps" min="2" max="40" value="18"></div>
+      <label class="sw"><input type="checkbox" id="chkDelta" checked> Enviar solo si el color cambia</label>
+      <label class="sw"><input type="checkbox" id="chkPreviewOnly"> Modo ensayo (no transmitir)</label>
+      <div class="hint">Muchos controladores BLE se atragantan por encima de ~20 tramas/s: la luz se
+        retrasa o se queda colgada. Sube solo si el tubo lo aguanta.</div>
+    </div>
+
+    <div class="card">
+      <h3>⌨︎ Atajos</h3>
+      <div class="hint" style="line-height:1.9">
+        <span class="kbd">Espacio</span> blackout &nbsp; <span class="kbd">S</span> estrobo (mantener)<br>
+        <span class="kbd">1</span>–<span class="kbd">9</span> favoritos &nbsp; <span class="kbd">R</span> aleatorio<br>
+        <span class="kbd">↑</span><span class="kbd">↓</span> brillo &nbsp; <span class="kbd">←</span><span class="kbd">→</span> velocidad<br>
+        <span class="kbd">B</span> tap tempo &nbsp; <span class="kbd">Esc</span> parar secuencia
+      </div>
+    </div>
+  </aside>
+  <nav id="mnav">
+    <button data-pane="left">🔗 Conexión</button>
+    <button data-pane="main" class="act">✨ Efectos</button>
+    <button data-pane="right">🎛 Controles</button>
+  </nav>
+</div>
+<div id="stage">
+  <div class="stube"><div class="sglow" id="sGlow"></div></div>
+  <div class="sinfo"><b id="sName">—</b><span id="sMeta">—</span></div>
+  <div class="sbtns" id="sBtns"></div>
+  <div class="sbar">
+    <button class="btn" id="sPrev">◀</button>
+    <button class="btn pri" id="sGo">▶ GO</button>
+    <input type="range" id="sBri" min="0" max="100" value="100">
+    <button class="btn dang" id="sBlack">⏻</button>
+    <button class="btn" id="sExit">✕</button>
+  </div>
+</div>
+<div id="catalog">
+  <div class="catbox">
+    <div class="cathead">
+      <h3>🏷 Catálogo</h3>
+      <input type="text" id="catSearch" placeholder="Buscar modelo…">
+      <button class="fbtn act" data-cf="all">Todas</button>
+      <button class="fbtn" data-cf="Sokani">Sokani</button>
+      <button class="fbtn" data-cf="Godox">Godox</button>
+      <button class="fbtn" data-cf="Nanlite">Nanlite</button>
+      <button class="btn sm" id="catClose">✕</button>
+    </div>
+    <div class="catbody" id="catBody"></div>
+  </div>
+</div>
+<div id="fxPop" hidden></div>
+<div id="alerts"></div>
+<div id="toast"></div>
+
+<script src="js/catalogos.js?v=38"></script>
+<script src="js/brands.js?v=38"></script>
+<script src="js/protocols.js?v=38"></script>
+<script src="js/lights.js?v=38"></script>
+<script src="js/native-bridge.js?v=38"></script>
+<script src="js/effects.js?v=38"></script>
+<script src="js/ble.js?v=38"></script>
+<script src="js/app.js?v=38"></script>
+<script src="js/pwa.js?v=38"></script>
+</body>
+</html>
