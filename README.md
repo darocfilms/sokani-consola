@@ -23,8 +23,8 @@ de terceros y no puedo garantizar desde aquí cómo guarda las webs; si en tu iP
 carga en modo avión, usa la app nativa.
 
 **Con la app nativa** (`ios/`) — va dentro del teléfono, así que funciona siempre sin
-internet. Se instala desde Xcode con un cable; los pasos están más abajo en
-«Como app: web instalable e iOS nativa».
+internet. Se instala desde Xcode con un cable: guía paso a paso en
+[ios/README.md](ios/README.md).
 
 **Instalada desde Safari** (Compartir → Añadir a pantalla de inicio) sirve para preparar
 looks, grupos y cues en modo ensayo, también sin internet, pero no mueve las luces.

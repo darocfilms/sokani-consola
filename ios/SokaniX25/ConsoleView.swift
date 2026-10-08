@@ -46,6 +46,7 @@ struct ConsoleView: UIViewRepresentable {
         if #available(iOS 16.4, *) { web.isInspectable = true }   // Safari > Desarrollo
         #endif
 
+        web.uiDelegate = context.coordinator
         context.coordinator.bridge.webView = web
         // En un set, que el iPhone se bloquee a mitad de una toma deja las luces
         // sin mando. Mientras la consola está abierta, la pantalla no se apaga.
@@ -62,7 +63,19 @@ struct ConsoleView: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) { }
 
-    final class Coordinator: NSObject, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
+        /// La consola es nuestra propia página, empaquetada en la app. iOS ya pide
+        /// permiso de micrófono una vez (NSMicrophoneUsageDescription); sin esto,
+        /// WebKit añadiría su propio «file:// quiere usar el micrófono» en cada
+        /// sesión. Cualquier otro origen se pregunta como siempre.
+        func webView(_ webView: WKWebView,
+                     requestMediaCapturePermissionFor origin: WKSecurityOrigin,
+                     initiatedByFrame frame: WKFrameInfo,
+                     type: WKMediaCaptureType,
+                     decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+            decisionHandler(origin.protocol == "file" && type == .microphone ? .grant : .prompt)
+        }
+
         let bridge = BLEBridge()
         func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
             if m.name == "sokaniLog" {
